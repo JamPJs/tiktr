@@ -7,7 +7,7 @@ function Home() {
   return (
     <>
       <div className="relative min-h-screen">
-        <div className="absolute inset-0 bg-[url('concertimg.jpeg')] bg-cover bg-center">
+        <div className="absolute inset-0 bg-[url('/concertimg.jpeg')] bg-cover bg-center">
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent"></div>
           <div className="absolute bottom-0 left-0 w-full h-[10%] bg-gradient-to-t from-black to-transparent"></div>
         </div>
