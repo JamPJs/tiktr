@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-const contractAddress = "0xab17b4bad18fb3dc7797a86dd7c32b3cdf9c62f7";
+const contractAddress = "0x8c471a471B9Ff3a2E6e1C47F65321051B84a078e";
 
 const contractABI = [
 	{
@@ -24,8 +24,26 @@ const contractABI = [
 	{
 		"inputs": [
 			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "burn",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "eventId",
+				"type": "uint256"
+			},
+			{
 				"internalType": "string",
-				"name": "tokenURI",
+				"name": "ticketTokenURI",
 				"type": "string"
 			}
 		],
@@ -43,11 +61,34 @@ const contractABI = [
 	{
 		"inputs": [
 			{
+				"internalType": "string",
+				"name": "metadataURI",
+				"type": "string"
+			},
+			{
 				"internalType": "uint256",
-				"name": "_ticketPrice",
+				"name": "ticketPrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "maxTickets",
 				"type": "uint256"
 			}
 		],
+		"name": "createEvent",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -249,6 +290,43 @@ const contractABI = [
 		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "eventId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "creator",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "ticketPrice",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "metadataURI",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "maxTickets",
+				"type": "uint256"
+			}
+		],
+		"name": "EventCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
 				"indexed": false,
 				"internalType": "uint256",
 				"name": "_tokenId",
@@ -354,21 +432,14 @@ const contractABI = [
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_ticketPrice",
-				"type": "uint256"
-			}
-		],
-		"name": "setTicketPrice",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "eventId",
+				"type": "uint256"
+			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
@@ -376,7 +447,7 @@ const contractABI = [
 				"type": "uint256"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "owner",
 				"type": "address"
@@ -447,8 +518,14 @@ const contractABI = [
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "withdraw",
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "useTicket",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -467,6 +544,90 @@ const contractABI = [
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "eventCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "eventIds",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "events",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "creator",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "ticketPrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "metadataURI",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "maxTickets",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "ticketsSold",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllEventIds",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
 			}
 		],
 		"stateMutability": "view",
@@ -594,20 +755,7 @@ const contractABI = [
 	},
 	{
 		"inputs": [],
-		"name": "ticketPrice",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "tokenCounter",
+		"name": "ticketCounter",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -640,64 +788,70 @@ const contractABI = [
 ];
 
 export const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        return signer;
-      } catch (error) {
-        console.error("User rejected wallet connection:", error);
-        throw error;
+  if (window.ethereum) {
+    try {
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      return signer;
+    } catch (error) {
+      console.error("User rejected wallet connection:", error);
+      throw error;
+    }
+  } else {
+    alert("MetaMask is not installed. Please install it to use this app.");
+    throw new Error("No crypto wallet found");
+  }
+};
+
+export const getContractInstance = (signer) => {
+  return new ethers.Contract(contractAddress, contractABI, signer);
+};
+
+export const createEvent = async (signer, metadataURI, ticketPrice, maxTickets) => {
+  const contract = getContractInstance(signer);
+  const tx = await contract.createEvent(metadataURI, ticketPrice, maxTickets);
+  console.log("Transaction sent:", tx.hash || tx.transactionHash);
+  const receipt = await tx.wait();
+  console.log("Transaction confirmed:", receipt.transactionHash || receipt.hash);
+  // Assuming the first event in the receipt is EventCreated
+  // and that its first indexed argument is eventId.
+  // Depending on ethers version, you might also use tx.wait() return value directly.
+  const eventId = receipt.events[0].args[0];
+  return eventId;
+};
+
+export const buyTicket = async (signer, eventId, ticketTokenURI, priceOverride) => {
+  const contract = getContractInstance(signer);
+  // Ensure the value sent is equal to the ticket price (in wei)
+  const tx = await contract.buyTicket(eventId, ticketTokenURI, { value: priceOverride });
+  console.log("Transaction sent:", tx.hash || tx.transactionHash);
+  const receipt = await tx.wait();
+  console.log("Transaction confirmed:", receipt.transactionHash || receipt.hash);
+  
+  const iface = contract.interface;
+  let tokenId;
+  for (const log of receipt.logs) {
+    try {
+      const parsedLog = iface.parseLog(log);
+      if (parsedLog.name === "TicketMinted") {
+        tokenId = parsedLog.args.tokenId;
+        break;
       }
-    } else {
-      alert("MetaMask is not installed. Please install it to use this app.");
-      throw new Error("No crypto wallet found");
+    } catch (error) {
+      // Skip logs that don't match
     }
-  };
+  }
   
-  export const getContractInstance = (signer) => {
-    return new ethers.Contract(contractAddress, contractABI, signer);
-  };
-  
-  export const getTicketPrice = async (signer) => {
-    const contract = getContractInstance(signer);
-    const price = await contract.ticketPrice();
-    return price;
-  };
-  
-  export const buyTicket = async (signer, tokenURI, priceOverride) => {
-    const contract = getContractInstance(signer);
-    
-    // Use the override if provided, otherwise call the contract function to get the default price
-    let price = priceOverride ? priceOverride : await getTicketPrice(signer);
-    
-    // Send the transaction to mint a ticket with the specified value
-    const tx = await contract.buyTicket(tokenURI, { value: price });
-    console.log("Transaction sent:", tx.hash || tx.transactionHash);
-    
-    // Wait for the transaction confirmation
-    const receipt = await tx.wait();
-    console.log("Transaction confirmed:", receipt.transactionHash || receipt.hash);
-    
-    // Decode logs to get the TicketMinted event and tokenId (as before)
-    const iface = contract.interface;
-    let ticketId;
-    for (const log of receipt.logs) {
-      try {
-        const parsedLog = iface.parseLog(log);
-        if (parsedLog.name === "TicketMinted") {
-          ticketId = parsedLog.args.tokenId;
-          break;
-        }
-      } catch (error) {
-        // Log doesn't match; skip it
-      }
-    }
-    
-    if (ticketId !== undefined) {
-      return ticketId;
-    } else {
-      throw new Error("TicketMinted event not found");
-    }
+  if (tokenId !== undefined) {
+    return tokenId;
+  } else {
+    throw new Error("TicketMinted event not found");
+  }
+};
+
+export const getAllEventIds = async (signer) => {
+  const contract = getContractInstance(signer);
+  const ids = await contract.getAllEventIds();
+  return ids;
 };

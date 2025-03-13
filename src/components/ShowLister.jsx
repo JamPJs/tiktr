@@ -1,23 +1,180 @@
-import React from 'react'
+import React, { useState } from 'react';
+import { ethers } from 'ethers';
+import { createEvent, connectWallet } from '../blockchain';
+import { useNavigate } from 'react-router-dom';
 
 function ShowLister() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    title: '',
+    date: '',
+    location: '',
+    image: '',
+    price: '',
+    description: '',
+    maxTickets: '',
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ 
+      ...formData, 
+      [e.target.name]: e.target.value 
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const signer = await connectWallet();
+      const ticketPriceWei = ethers.parseEther(formData.price);
+      const metadataURI = `https://ipfs.io/ipfs/bafkreie7otemlkqhhemy2ul7z2bcgrdm3v4l4n7ewmyul7rnpt3nchqljy?title=${encodeURIComponent(formData.title)}&desc=${encodeURIComponent(formData.description)}&date=${encodeURIComponent(formData.date)}&location=${encodeURIComponent(formData.location)}&image=${encodeURIComponent(formData.image)}`;
+
+      const eventId = await createEvent(signer, metadataURI, ticketPriceWei, formData.maxTickets);
+      
+      alert("Event listed successfully! Event ID: " + eventId);
+      setFormData({
+        title: '',
+        date: '',
+        location: '',
+        image: '',
+        price: '',
+        description: '',
+        maxTickets: '',
+      });
+      navigate('/findshows');
+    } catch (error) {
+      console.error("Error listing event:", error);
+      alert("Error listing event. Check console for details.");
+    }
+    setLoading(false);
+  };
+
   return (
-    <>
-    <div className='min-h-64 bg-gradient-to-b from-black via-black to-[#c2410c]'>
-        <div className='bg-opacity-50 flex'><span className='text-white text-6xl font-serif mx-auto text-center justify-center pt-96 font-semibold'>Host any event with tiktr</span></div>
+    <div className="min-h-screen pt-20 bg-gradient-to-b from-black via-black to-[#c2410c] p-8">
+      <div className="max-w-4xl mx-auto bg-gray-700 rounded-lg shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-center mb-8 text-white">
+          Host Your Event with Tiktr
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Event Title */}
+          <div>
+            <label htmlFor="title" className="block text-white font-medium mb-2">
+              Event Title
+            </label>
+            <input
+              type="text"
+              name="title"
+              id="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
+              required
+            />
+          </div>
+          {/* Event Date */}
+          <div>
+            <label htmlFor="date" className="block text-white font-medium mb-2">
+              Event Date
+            </label>
+            <input
+              type="date"
+              name="date"
+              id="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
+              required
+            />
+          </div>
+          {/* Location */}
+          <div>
+            <label htmlFor="location" className="block text-white font-medium mb-2">
+              Location
+            </label>
+            <input
+              type="text"
+              name="location"
+              id="location"
+              value={formData.location}
+              onChange={handleChange}
+              className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
+              required
+            />
+          </div>
+          {/* Image URL */}
+          <div>
+            <label htmlFor="image" className="block text-white font-medium mb-2">
+              Image URL
+            </label>
+            <input
+              type="text"
+              name="image"
+              id="image"
+              value={formData.image}
+              onChange={handleChange}
+              className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
+              required
+            />
+          </div>
+          {/* Ticket Price in ETH */}
+          <div>
+            <label htmlFor="price" className="block text-white font-medium mb-2">
+              Ticket Price (in ETH)
+            </label>
+            <input
+              type="number"
+              name="price"
+              id="price"
+              value={formData.price}
+              onChange={handleChange}
+              className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
+              step="any"
+              required
+            />
+          </div>
+          {/* Max Tickets */}
+          <div>
+            <label htmlFor="maxTickets" className="block text-white font-medium mb-2">
+              Max Tickets
+            </label>
+            <input
+              type="number"
+              name="maxTickets"
+              id="maxTickets"
+              value={formData.maxTickets}
+              onChange={handleChange}
+              className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
+              required
+            />
+          </div>
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-white font-medium mb-2">
+              Description
+            </label>
+            <textarea
+              name="description"
+              id="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="4"
+              className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
+              required
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-700 text-white font-bold py-2 px-6 rounded hover:bg-blue-800 transition-colors"
+          >
+            {loading ? "Listing Event..." : "List Event"}
+          </button>
+        </form>
+      </div>
     </div>
-    <div className='min-h-screen bg-orange-700'>
-        <div className='grid lg:grid-cols-3 sm:grid-cols-2 justify-between gap-4 p-12'>
-            <div className='hover:scale-105 transition-transform duration-150'><img src='\Sing a song.png' className='w-full object-cover rounded-2xl'/><span>Concerts</span></div>
-            <div className='hover:scale-105 transition-transform duration-150'><img src='\Sing a song.png' className='w-full object-cover rounded-2xl'/><span>Concerts</span></div>
-            <div className='hover:scale-105 transition-transform duration-150'><img src='\Bass guitar.png' className='w-full object-cover rounded-2xl'/><span>Concerts</span></div>
-            <div className='hover:scale-105 transition-transform duration-150'><img src='\Bass guitar.png' className='w-full object-cover rounded-2xl'/><span>Concerts</span></div>
-            <div className='hover:scale-105 transition-transform duration-150'><img src='\Sing a song.png' className='w-full object-cover rounded-2xl'/><span>Concerts</span></div>
-            <div className='hover:scale-105 transition-transform duration-150'><img src='\Bass guitar.png' className='w-full object-cover rounded-2xl'/><span>Concerts</span></div>
-        </div>
-    </div>
-    </>
-  )
+  );
 }
 
-export default ShowLister
+export default ShowLister;

@@ -12,12 +12,10 @@ function TicketPage() {
   const [ticketId, setTicketId] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Check if a wallet is already connected on mount
   useEffect(() => {
     async function checkWalletConnection() {
       if (window.ethereum) {
