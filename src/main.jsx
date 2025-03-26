@@ -10,7 +10,7 @@ import ShowLister from './components/ShowLister';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
 import TicketPage from "./components/TicketPage";
-
+import MyEvents from "./components/MyEvents";  // Import MyEvents
 
 const router = createBrowserRouter([
   {
@@ -44,6 +44,10 @@ const router = createBrowserRouter([
       {
         path: 'tickets',
         element: <TicketPage />,
+      },
+      {
+        path: 'my-events',  // New route for My Events
+        element: <MyEvents />,
       }
     ],
   },

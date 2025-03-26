@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
+import axios from 'axios';
 
-const contractAddress = "0x8c471a471B9Ff3a2E6e1C47F65321051B84a078e";
+const contractAddress = "0x7a5ce3904a10aaad74488668304a4767f1ff9289";
 
 const contractABI = [
 	{
@@ -770,6 +771,25 @@ const contractABI = [
 		"inputs": [
 			{
 				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "tokenEventId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
 				"name": "tokenId",
 				"type": "uint256"
 			}
@@ -788,70 +808,112 @@ const contractABI = [
 ];
 
 export const connectWallet = async () => {
-  if (window.ethereum) {
-    try {
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      return signer;
-    } catch (error) {
-      console.error("User rejected wallet connection:", error);
-      throw error;
-    }
-  } else {
-    alert("MetaMask is not installed. Please install it to use this app.");
-    throw new Error("No crypto wallet found");
-  }
-};
-
-export const getContractInstance = (signer) => {
-  return new ethers.Contract(contractAddress, contractABI, signer);
-};
-
-export const createEvent = async (signer, metadataURI, ticketPrice, maxTickets) => {
-  const contract = getContractInstance(signer);
-  const tx = await contract.createEvent(metadataURI, ticketPrice, maxTickets);
-  console.log("Transaction sent:", tx.hash || tx.transactionHash);
-  const receipt = await tx.wait();
-  console.log("Transaction confirmed:", receipt.transactionHash || receipt.hash);
-  // Assuming the first event in the receipt is EventCreated
-  // and that its first indexed argument is eventId.
-  // Depending on ethers version, you might also use tx.wait() return value directly.
-  const eventId = receipt.events[0].args[0];
-  return eventId;
-};
-
-export const buyTicket = async (signer, eventId, ticketTokenURI, priceOverride) => {
-  const contract = getContractInstance(signer);
-  // Ensure the value sent is equal to the ticket price (in wei)
-  const tx = await contract.buyTicket(eventId, ticketTokenURI, { value: priceOverride });
-  console.log("Transaction sent:", tx.hash || tx.transactionHash);
-  const receipt = await tx.wait();
-  console.log("Transaction confirmed:", receipt.transactionHash || receipt.hash);
+	if (window.ethereum) {
+	  try {
+		await window.ethereum.request({ method: "eth_requestAccounts" });
+		const provider = new ethers.BrowserProvider(window.ethereum);
+		const signer = await provider.getSigner();
+		return signer;
+	  } catch (error) {
+		console.error("User rejected wallet connection:", error);
+		throw error;
+	  }
+	} else {
+	  alert("MetaMask is not installed. Please install it to use this app.");
+	  throw new Error("No crypto wallet found");
+	}
+  };
   
-  const iface = contract.interface;
-  let tokenId;
-  for (const log of receipt.logs) {
-    try {
-      const parsedLog = iface.parseLog(log);
-      if (parsedLog.name === "TicketMinted") {
-        tokenId = parsedLog.args.tokenId;
-        break;
+  export const getContractInstance = (signer) => {
+	return new ethers.Contract(contractAddress, contractABI, signer);
+  };
+  
+  export const createEvent = async (signer, metadataURI, ticketPrice, maxTickets) => {
+	const contract = getContractInstance(signer);
+	const tx = await contract.createEvent(metadataURI, ticketPrice, maxTickets);
+	console.log("Transaction sent:", tx.hash || tx.transactionHash);
+	const receipt = await tx.wait();
+	console.log("Transaction confirmed:", receipt.transactionHash || receipt.hash);
+	
+	const iface = contract.interface;
+	let eventCreated;
+	for (const log of receipt.logs) {
+	  try {
+		const parsedLog = iface.parseLog(log);
+		if (parsedLog.name === "EventCreated") {
+		  eventCreated = parsedLog;
+		  break;
+		}
+	  } catch (error) {
+		// This log doesn't belong to our contract; skip it.
+	  }
+	}
+	
+	if (!eventCreated) {
+	  console.error("EventCreated event not found in logs:", receipt.logs);
+	  throw new Error("EventCreated event not found");
+	}
+	
+	// Extract eventId from the parsed log; assuming it's the first argument.
+	const eventId = eventCreated.args[0];
+	return eventId;
+  };
+  
+  
+  export const buyTicket = async (signer, eventId, ticketTokenURI, priceOverride) => {
+	const contract = getContractInstance(signer);
+	const tx = await contract.buyTicket(eventId, ticketTokenURI, { value: priceOverride });
+	console.log("Transaction sent:", tx.hash || tx.transactionHash);
+	const receipt = await tx.wait();
+	console.log("Transaction confirmed:", receipt.transactionHash || receipt.hash);
+	
+	const iface = contract.interface;
+	let tokenId;
+	for (const log of receipt.logs) {
+	  try {
+		const parsedLog = iface.parseLog(log);
+		if (parsedLog.name === "TicketMinted") {
+		  tokenId = parsedLog.args.tokenId;
+		  break;
+		}
+	  } catch (error) {
+		// Skip logs that don't match
+	  }
+	}
+	
+	if (tokenId !== undefined) {
+	  return tokenId;
+	} else {
+	  throw new Error("TicketMinted event not found");
+	}
+  };
+  
+  export const getAllEventIds = async (signer) => {
+	const contract = getContractInstance(signer);
+	const ids = await contract.getAllEventIds();
+	return ids;
+  };
+
+
+
+export const uploadFileToIPFS = async (file) => {
+  const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
+  let data = new FormData();
+  data.append('file', file);
+
+  try {
+    const res = await axios.post(url, data, {
+      maxContentLength: 'Infinity', // For large files
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
+        pinata_api_key: '4c403b4e049fcdc03b9c',
+        pinata_secret_api_key: '7f1b0f992ecc168364d1c6f9346d4f4f15ed468e17983895af47574a076c91a0'
       }
-    } catch (error) {
-      // Skip logs that don't match
-    }
+    });
+    console.log("File uploaded to IPFS. Hash:", res.data.IpfsHash);
+    return `https://ipfs.io/ipfs/${res.data.IpfsHash}`;
+  } catch (error) {
+    console.error("Error uploading file to IPFS:", error);
+    throw error;
   }
-  
-  if (tokenId !== undefined) {
-    return tokenId;
-  } else {
-    throw new Error("TicketMinted event not found");
-  }
-};
-
-export const getAllEventIds = async (signer) => {
-  const contract = getContractInstance(signer);
-  const ids = await contract.getAllEventIds();
-  return ids;
 };

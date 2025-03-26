@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { createEvent, connectWallet } from '../blockchain';
+import { uploadFileToIPFS } from "../blockchain";
 import { useNavigate } from 'react-router-dom';
 
 function ShowLister() {
@@ -9,11 +10,12 @@ function ShowLister() {
     title: '',
     date: '',
     location: '',
-    image: '',
     price: '',
     description: '',
     maxTickets: '',
   });
+  const [imageFile, setImageFile] = useState(null); 
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(''); // URL returned from IPFS
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -23,13 +25,28 @@ function ShowLister() {
     });
   };
 
+  // Handle file input change
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const signer = await connectWallet();
       const ticketPriceWei = ethers.parseEther(formData.price);
-      const metadataURI = `https://ipfs.io/ipfs/bafkreie7otemlkqhhemy2ul7z2bcgrdm3v4l4n7ewmyul7rnpt3nchqljy?title=${encodeURIComponent(formData.title)}&desc=${encodeURIComponent(formData.description)}&date=${encodeURIComponent(formData.date)}&location=${encodeURIComponent(formData.location)}&image=${encodeURIComponent(formData.image)}`;
+
+      // First, if an image file was selected, upload it to IPFS
+      let imageUrl = uploadedImageUrl;
+      if (imageFile && !uploadedImageUrl) {
+        imageUrl = await uploadFileToIPFS(imageFile);
+        setUploadedImageUrl(imageUrl);
+      }
+      
+      const metadataURI = `https://ipfs.io/ipfs/bafkreie7otemlkqhhemy2ul7z2bcgrdm3v4l4n7ewmyul7rnpt3nchqljy?title=${encodeURIComponent(formData.title)}&desc=${encodeURIComponent(formData.description)}&date=${encodeURIComponent(formData.date)}&location=${encodeURIComponent(formData.location)}&image=${encodeURIComponent(imageUrl)}`;
 
       const eventId = await createEvent(signer, metadataURI, ticketPriceWei, formData.maxTickets);
       
@@ -38,11 +55,12 @@ function ShowLister() {
         title: '',
         date: '',
         location: '',
-        image: '',
         price: '',
         description: '',
         maxTickets: '',
       });
+      setImageFile(null);
+      setUploadedImageUrl('');
       navigate('/findshows');
     } catch (error) {
       console.error("Error listing event:", error);
@@ -103,17 +121,17 @@ function ShowLister() {
               required
             />
           </div>
-          {/* Image URL */}
+          {/* File Input for Image Upload */}
           <div>
-            <label htmlFor="image" className="block text-white font-medium mb-2">
-              Image URL
+            <label htmlFor="imageFile" className="block text-white font-medium mb-2">
+              Event Image Upload
             </label>
             <input
-              type="text"
-              name="image"
-              id="image"
-              value={formData.image}
-              onChange={handleChange}
+              type="file"
+              name="imageFile"
+              id="imageFile"
+              accept="image/*"
+              onChange={handleFileChange}
               className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
               required
             />
